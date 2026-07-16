@@ -177,7 +177,11 @@ def main():
     parser.add_argument('--preview', action='store_true',
                         help='Show a scaled pygame preview window')
     parser.add_argument('--plc', metavar='AMS_NET_ID',
-                        help='Push frames to PLC via ADS (e.g. 5.80.192.2.1.1)')
+                        help='Push frames to PLC via ADS (e.g. 5.80.192.2.1.1, '
+                             'or "local" when running on the PLC itself)')
+    parser.add_argument('--gvl', default='DOOMgvl',
+                        help='Name of the DOOM GVL in the TwinCAT project '
+                             '(default: DOOMgvl)')
     parser.add_argument('--port', type=int, default=851,
                         help='AMS port (default: 851)')
     parser.add_argument('--fps', type=int, default=20,
@@ -198,7 +202,7 @@ def main():
 
     if args.plc:
         from plc_bridge import PLCBridge
-        bridge = PLCBridge(args.plc, args.port)
+        bridge = PLCBridge(args.plc, args.port, gvl=args.gvl)
 
     print('=== LED DOOM ===')
     print(f'Resolution: {SCREEN_W}x{SCREEN_H}')
