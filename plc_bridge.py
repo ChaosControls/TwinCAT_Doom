@@ -5,9 +5,6 @@ Writes the 32x64 UDINT pixel array to m2048.mMatrix via ADS.
 Reads Xbox controller state from the DOOMgvl GVL variables.
 """
 
-import struct
-import time
-
 try:
     import pyads
     HAS_PYADS = True
@@ -68,13 +65,12 @@ class PLCBridge:
             return True
 
     def write_frame(self, flat_array):
-        """Write 2048 UDINTs to m2048.mMatrix."""
-        data = struct.pack(f'<{len(flat_array)}I', *flat_array)
-        self.plc.write(
-            pyads.INDEXGROUP_SYM_VALBYHND,
-            self._matrix_handle,
-            data,
-            pyads.PLCTYPE_BYTE * len(data),
+        """Write 2048 UDINTs to m2048.mMatrix via the cached symbol handle."""
+        self.plc.write_by_name(
+            '',
+            list(flat_array),
+            pyads.PLCTYPE_UDINT * len(flat_array),
+            handle=self._matrix_handle,
         )
 
     def read_controls(self):
