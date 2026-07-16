@@ -6,10 +6,23 @@ rem
 rem Runs headless (TwinCAT service session — no visible window).
 rem All output goes to doom_log.txt for debugging.
 rem
-rem --plc local resolves the machine's own AMS Net ID through the
-rem TwinCAT router (loopback 127.0.0.1.1.1 is NOT routed and fails
-rem with ADS error 6). --auto-exit makes Python shut down when
-rem DOOMgvl.bActive goes FALSE (Y-button reset on the PLC).
+rem NT_StartProcess runs this as SYSTEM, whose PATH does not
+rem include per-user Python installs — so we fall back to the
+rem full path if "python" is not found. Adjust PYTHON_FALLBACK
+rem if Python lives somewhere else on this machine.
+rem
+rem TARGET/PORT: --plc local resolves this machine's own AMS Net
+rem ID through the TwinCAT router. If the PLC runtime uses its
+rem own Net ID or a non-default port (see probe_ads.py), set
+rem them here.
 rem ============================================================
+set "PYTHON_FALLBACK=C:\Users\Administrator\AppData\Local\Programs\Python\Python314\python.exe"
+set "TARGET=local"
+set "PORT=851"
+
 cd /d %~dp0
-python main.py --plc local --auto-exit > doom_log.txt 2>&1
+
+set "PYTHON=python"
+where python >nul 2>&1 || set "PYTHON=%PYTHON_FALLBACK%"
+
+"%PYTHON%" main.py --plc %TARGET% --port %PORT% --auto-exit > doom_log.txt 2>&1
