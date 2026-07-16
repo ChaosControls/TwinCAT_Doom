@@ -49,11 +49,15 @@ Add two things to your TwinCAT project:
 
 Create a new Global Variable List and paste the contents of [`plc_code/GVL_Doom.txt`](plc_code/GVL_Doom.txt).
 
-**b) Modify MAIN**
+**b) New Function Block: `fb_Doom`**
+
+Create a new Function Block and paste the contents of [`plc_code/fb_Doom.txt`](plc_code/fb_Doom.txt). This handles the matrix transform and LED output state machine for Doom mode.
+
+**c) Modify MAIN**
 
 Follow the instructions in [`plc_code/MAIN_DoomAdditions.txt`](plc_code/MAIN_DoomAdditions.txt):
-1. Add `doomControls : gameControls;` and `doomTransform : FB_MatrixTransform;` to the VAR block
-2. Add the `DOOM.bDoomMode` state transitions before the CASE statement
+1. Add `doom : fb_Doom;` to the VAR block
+2. Add the right shoulder button trigger before the CASE statement
 3. Add state `40` (Doom Mode) to the CASE block
 
 Build and deploy the modified project to your PLC.
@@ -158,6 +162,7 @@ LED_Doom/
 ├── README.md
 └── plc_code/
     ├── GVL_Doom.txt              # New GVL to add to TwinCAT project
+    ├── fb_Doom.txt               # New function block — LED output state machine
     └── MAIN_DoomAdditions.txt    # Modifications for MAIN program
 ```
 

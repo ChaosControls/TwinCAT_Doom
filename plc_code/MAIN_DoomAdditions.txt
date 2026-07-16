@@ -7,8 +7,7 @@
 
 // --- 1. Add these variables to the MAIN VAR block: -----------
 //
-//     doomControls : gameControls;   // blank controls for Doom mode
-//     doomTransform : FB_MatrixTransform;
+//     doom : fb_Doom;
 //
 
 
@@ -17,7 +16,7 @@
 // In the CASE nState OF block, add this after state 30:
 //
 //     40: // Doom Mode — Python pushes frames via ADS
-//         // Copy controller state to DOOM GVL for Python to read
+//         // Copy analog controller state to DOOM GVL for Python
 //         DOOM.jsLeftX  := XboxController.P_Left_Joystick.fX;
 //         DOOM.jsLeftY  := XboxController.P_Left_Joystick.fY;
 //         DOOM.jsRightX := XboxController.P_Right_Joystick.fX;
@@ -27,18 +26,14 @@
 //         DOOM.btnX     := controller.xButton;
 //         DOOM.btnStart := XboxController.P_Buttons.bStart;
 //
-//         // Transform the matrix that Python writes via ADS
-//         doomTransform(inMatrix := m2048.mMatrix);
-//
-//         // Run LED output with blank controls (no lamp test)
-//         fbLampCheck(controls := doomControls);
+//         // Transform mMatrix and output to LEDs
+//         doom();
 
 
 // --- 3. Add the Doom Mode trigger before the CASE: -----------
 // Place this right before the "CASE nState OF" line.
 // Right shoulder button enters Doom mode.
-// The existing Y-button 3-second reset (resetTimer) already
-// handles returning to state 0 from any state, including Doom.
+// The existing Y-button 3-second reset (resetTimer) handles exit.
 //
 //     IF XboxController.P_Buttons.bRight_Shoulder AND nState <> 40 THEN
 //         nState := 40;
@@ -79,7 +74,6 @@
 //         DOOM.btnX     := controller.xButton;
 //         DOOM.btnStart := XboxController.P_Buttons.bStart;
 //
-//         doomTransform(inMatrix := m2048.mMatrix);
-//         fbLampCheck(controls := doomControls);
+//         doom();
 //
 // END_CASE

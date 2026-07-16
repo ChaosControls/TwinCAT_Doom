@@ -3,16 +3,11 @@
 // Add this as a new Global Variable List in your TwinCAT project.
 //
 // Purpose: ADS interface between the Python Doom engine and
-// the PLC.  Python writes bDoomMode and reads controller state.
+// the PLC.  PLC writes controller state, Python reads it.
 // ============================================================
 
 {attribute 'qualified_only'}
 VAR_GLOBAL
-    // Python sets this TRUE to enable Doom display mode.
-    // When TRUE, the PLC continuously transforms m2048.mMatrix
-    // (written by Python via ADS) and outputs it to the LED panel.
-    bDoomMode : BOOL;
-
     // Controller state — written by PLC each cycle, read by Python.
     // Joystick axes are -100..+100 (REAL).
     jsLeftX   : REAL;

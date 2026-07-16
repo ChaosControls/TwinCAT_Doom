@@ -1,0 +1,101 @@
+FUNCTION_BLOCK fb_Doom
+VAR
+	nState : USINT := 0;
+	transform : FB_MatrixTransform;
+END_VAR
+________________________________________________________
+CASE nState OF
+	0..63:
+		LED.slot1.nIndex := nState;
+		LED.slot1.nElement[0]:= m2048.tMatrix[nState*8];
+		LED.slot1.nElement[1]:= m2048.tMatrix[(nState*8)+1];
+		LED.slot1.nElement[2]:= m2048.tMatrix[(nState*8)+2];
+		LED.slot1.nElement[3]:= m2048.tMatrix[(nState*8)+3];
+		LED.slot1.nElement[4]:= m2048.tMatrix[(nState*8)+4];
+		LED.slot1.nElement[5]:= m2048.tMatrix[(nState*8)+5];
+		LED.slot1.nElement[6]:= m2048.tMatrix[(nState*8)+6];
+		LED.slot1.nElement[7]:= m2048.tMatrix[(nState*8)+7];
+
+		LED.slot1.bWrite := 1;
+		LED.slot1.bExecute := NOT LED.slot1.bExecute;
+
+		LED.slot2.nIndex := nState;
+		LED.slot2.nElement[0]:= m2048.tMatrix[(nState*8)+512];
+		LED.slot2.nElement[1]:= m2048.tMatrix[(nState*8)+513];
+		LED.slot2.nElement[2]:= m2048.tMatrix[(nState*8)+514];
+		LED.slot2.nElement[3]:= m2048.tMatrix[(nState*8)+515];
+		LED.slot2.nElement[4]:= m2048.tMatrix[(nState*8)+516];
+		LED.slot2.nElement[5]:= m2048.tMatrix[(nState*8)+517];
+		LED.slot2.nElement[6]:= m2048.tMatrix[(nState*8)+518];
+		LED.slot2.nElement[7]:= m2048.tMatrix[(nState*8)+519];
+
+		LED.slot2.bWrite := 1;
+		LED.slot2.bExecute := NOT LED.slot2.bExecute;
+
+		LED.slot3.nIndex := nState;
+		LED.slot3.nElement[0]:= m2048.tMatrix[(nState*8)+1024];
+		LED.slot3.nElement[1]:= m2048.tMatrix[(nState*8)+1025];
+		LED.slot3.nElement[2]:= m2048.tMatrix[(nState*8)+1026];
+		LED.slot3.nElement[3]:= m2048.tMatrix[(nState*8)+1027];
+		LED.slot3.nElement[4]:= m2048.tMatrix[(nState*8)+1028];
+		LED.slot3.nElement[5]:= m2048.tMatrix[(nState*8)+1029];
+		LED.slot3.nElement[6]:= m2048.tMatrix[(nState*8)+1030];
+		LED.slot3.nElement[7]:= m2048.tMatrix[(nState*8)+1031];
+
+		LED.slot3.bWrite := 1;
+		LED.slot3.bExecute := NOT LED.slot3.bExecute;
+
+		LED.slot4.nIndex := nState;
+		LED.slot4.nElement[0]:= m2048.tMatrix[(nState*8)+1536];
+		LED.slot4.nElement[1]:= m2048.tMatrix[(nState*8)+1537];
+		LED.slot4.nElement[2]:= m2048.tMatrix[(nState*8)+1538];
+		LED.slot4.nElement[3]:= m2048.tMatrix[(nState*8)+1539];
+		LED.slot4.nElement[4]:= m2048.tMatrix[(nState*8)+1540];
+		LED.slot4.nElement[5]:= m2048.tMatrix[(nState*8)+1541];
+		LED.slot4.nElement[6]:= m2048.tMatrix[(nState*8)+1542];
+		LED.slot4.nElement[7]:= m2048.tMatrix[(nState*8)+1543];
+
+		LED.slot4.bWrite := 1;
+		LED.slot4.bExecute := NOT LED.slot4.bExecute;
+
+		IF NOT LED.slot1.bBusy AND NOT LED.slot2.bBusy AND NOT LED.slot3.bBusy AND NOT LED.slot4.bBusy THEN
+			LED.slot1.bUpdate := 0;
+			LED.slot2.bUpdate := 0;
+			LED.slot3.bUpdate := 0;
+			LED.slot4.bUpdate := 0;
+			nState := nState + 1;
+		END_IF
+
+		IF nState = 64 THEN
+			LED.slot1.bUpdate := 1;
+			LED.slot1.bSend := 1;
+			LED.slot2.bUpdate := 1;
+			LED.slot2.bSend := 1;
+			LED.slot3.bUpdate := 1;
+			LED.slot3.bSend := 1;
+			LED.slot4.bUpdate := 1;
+			LED.slot4.bSend := 1;
+		END_IF
+	64:
+		LED.slot1.bUpdate := 0;
+		LED.slot1.bSend := 0;
+		LED.slot1.bExecute := NOT LED.slot1.bExecute;
+
+		LED.slot2.bUpdate := 0;
+		LED.slot2.bSend := 0;
+		LED.slot2.bExecute := NOT LED.slot2.bExecute;
+
+		LED.slot3.bUpdate := 0;
+		LED.slot3.bSend := 0;
+		LED.slot3.bExecute := NOT LED.slot3.bExecute;
+
+		LED.slot4.bUpdate := 0;
+		LED.slot4.bSend := 0;
+		LED.slot4.bExecute := NOT LED.slot4.bExecute;
+
+		// Transform Python-written matrix for next LED refresh
+		transform(inMatrix := m2048.mMatrix);
+
+		nState := 0;
+
+END_CASE

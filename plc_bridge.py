@@ -44,15 +44,10 @@ class PLCBridge:
         self.plc = pyads.Connection(self.ams_net_id, self.ams_port)
         self.plc.open()
         self._matrix_handle = self.plc.get_handle('m2048.mMatrix')
-        self.set_doom_mode(True)
         print(f'Connected to PLC at {self.ams_net_id}:{self.ams_port}')
 
     def disconnect(self):
         if self.plc:
-            try:
-                self.set_doom_mode(False)
-            except Exception:
-                pass
             if self._matrix_handle is not None:
                 try:
                     self.plc.release_handle(self._matrix_handle)
@@ -61,9 +56,6 @@ class PLCBridge:
             self.plc.close()
             self.plc = None
         print('Disconnected from PLC')
-
-    def set_doom_mode(self, enabled):
-        self.plc.write_by_name('DOOM.bDoomMode', enabled, pyads.PLCTYPE_BOOL)
 
     def write_frame(self, flat_array):
         """Write 2048 UDINTs to m2048.mMatrix."""
