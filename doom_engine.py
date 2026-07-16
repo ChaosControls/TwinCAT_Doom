@@ -250,7 +250,7 @@ LEVEL_MAPS = [
         '#...a....33....h...#',
         '#..................#',
         '####..####..####...#',
-        '#.........i........#',
+        '#..h......i........#',
         '#..i............d..#',
         '#..................#',
         '#...###....###.....#',
@@ -268,7 +268,7 @@ LEVEL_MAPS = [
         '2......2...........2',
         '2..h...2....i......2',
         '2......2222....22222',
-        '2..........i.......2',
+        '2...h......i.......2',
         '2222..2............2',
         '2.....2............D',
         '2....222....22..d..2',
@@ -289,7 +289,7 @@ LEVEL_MAPS = [
         '3..33333....33333..3',
         '3..3.............h.3',
         '3..3..i......d.....3',
-        '3..3.....i.........3',
+        '3..3.....i......h..3',
         'D..................3',
         '3....333....333....3',
         '3.h..3........3..i.3',
@@ -303,7 +303,7 @@ LEVEL_MAPS = [
     [
         '44444444444444444444',
         '4........4.......P.4',
-        '4..i.....4.........4',
+        '4..i.....4....h....4',
         '4..k.....4....444..4',
         '4..444...4....4....4',
         '4....4........4..i.4',
@@ -311,7 +311,7 @@ LEVEL_MAPS = [
         '4..................4',
         '4..44444....44444..4',
         '4..4..i......d..4..4',
-        '4..4............4..4',
+        '4..4.....h......4..4',
         '4...........i......4',
         '4.h..44....44...a..4',
         '4.....d........d...4',
@@ -324,7 +324,7 @@ LEVEL_MAPS = [
         '2P.......22........2',
         '2........22....i...2',
         '2..i.....22........2',
-        '2..................2',
+        '2........h.........2',
         '2..222........222..2',
         '2..2..........2....2',
         '2..2....d.....2..i.2',
@@ -334,7 +334,7 @@ LEVEL_MAPS = [
         '2........B.....d...2',
         '2..................2',
         '2......2...2.......2',
-        '2..................2',
+        '2.............h....2',
         '2...i........i.....2',
         '2..................2',
         '2..h............a..2',
@@ -407,12 +407,14 @@ class Player:
 
 
 class Enemy:
+    # damage = 5 for everyone: one tick of the 20-tick HUD health bar
+    # per hit.
     TYPES = {
-        'imp':   {'hp': 100, 'color': C_ENEMY_IMP,   'speed': 1.5, 'damage': 8,
+        'imp':   {'hp': 100, 'color': C_ENEMY_IMP,   'speed': 1.5, 'damage': 5,
                   'shape': IMP_SHAPE,   'scale': 1.0},
-        'demon': {'hp': 150, 'color': C_ENEMY_DEMON, 'speed': 2.2, 'damage': 14,
+        'demon': {'hp': 150, 'color': C_ENEMY_DEMON, 'speed': 2.2, 'damage': 5,
                   'shape': DEMON_SHAPE, 'scale': 1.0},
-        'boss':  {'hp': 500, 'color': C_ENEMY_BOSS,  'speed': 1.1, 'damage': 20,
+        'boss':  {'hp': 500, 'color': C_ENEMY_BOSS,  'speed': 1.1, 'damage': 5,
                   'shape': BOSS_SHAPE,  'scale': 1.55},
     }
 
@@ -439,7 +441,7 @@ class Enemy:
 
 class Item:
     TYPES = {
-        'health': {'color': C_ITEM_HEALTH, 'value': 25, 'shape': HEALTH_SHAPE, 'scale': 0.45},
+        'health': {'color': C_ITEM_HEALTH, 'value': 50, 'shape': HEALTH_SHAPE, 'scale': 0.45},
         'ammo':   {'color': C_ITEM_AMMO,   'value': 15, 'shape': AMMO_SHAPE,   'scale': 0.45},
         'key':    {'color': C_ITEM_KEY,    'value': 0,  'shape': KEY_SHAPE,    'scale': 0.55},
     }
@@ -626,6 +628,12 @@ class DoomGame:
                     p.has_key = True
                     item.picked_up = True
 
+        # Out of ammo with nothing left to grab: spawn a fresh clip
+        # somewhere on the level so the player is never stuck.
+        if p.ammo <= 0 and not any(
+                i.kind == 'ammo' and not i.picked_up for i in self.items):
+            self._spawn_ammo()
+
         # Exit door: needs the key, walk up to it to leave the level.
         if p.has_key and self.door_tile:
             dx_, dy_ = self.door_tile
@@ -640,6 +648,19 @@ class DoomGame:
 
         self.damage_flash = max(0, self.damage_flash - dt)
         p.is_shooting = False
+
+    def _spawn_ammo(self):
+        p = self.player
+        for _ in range(60):
+            x = random.randint(1, self.map_w - 2)
+            y = random.randint(1, self.map_h - 2)
+            if self.level[y][x] != 0:
+                continue
+            # Not right on top of the player — make them go find it.
+            if math.hypot(x + 0.5 - p.x, y + 0.5 - p.y) < 3.0:
+                continue
+            self.items.append(Item(x + 0.5, y + 0.5, 'ammo'))
+            return
 
     def _move_enemy(self, e, angle, speed, dt):
         enx = e.x + math.cos(angle) * speed * dt
