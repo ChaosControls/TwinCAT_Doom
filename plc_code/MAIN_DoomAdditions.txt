@@ -2,16 +2,50 @@
 // MAIN — Doom Mode Additions
 //
 // Add these changes to your existing MAIN program.
+// Requires the Tc2_System library (for NT_StartProcess).
 // ============================================================
 
 
 // --- 1. Add these variables to the MAIN VAR block: -----------
 //
 //     doom : fb_Doom;
+//     startDoom : NT_StartProcess;   // launches the Python engine
 //
 
 
-// --- 2. Add state 40 (Doom Mode) to the CASE statement: ------
+// --- 2. Add the trigger + launcher before the CASE: ----------
+// Place this right before the "CASE nState OF" line.
+// Right shoulder button enters Doom mode.
+// The existing Y-button 3-second reset (resetTimer) handles exit.
+//
+//     IF XboxController.P_Buttons.bRight_Shoulder AND nState <> 40 THEN
+//         nState := 40;
+//     END_IF
+//
+//     // Tell Python whether Doom mode is active — the Python
+//     // engine polls this via ADS and exits when it goes FALSE.
+//     DOOM.bActive := (nState = 40);
+//
+//     // Launch the Python engine when entering state 40.
+//     // NT_StartProcess fires on the rising edge of START, so
+//     // holding START TRUE for the whole time in state 40 only
+//     // launches once per entry.
+//     // Adjust PATHSTR/DIRNAME to wherever the repo lives on the IPC.
+//     startDoom(
+//         NETID     := '',
+//         PATHSTR   := 'C:\LED_Doom\run_doom.bat',
+//         DIRNAME   := 'C:\LED_Doom',
+//         COMNDLINE := '',
+//         START     := (nState = 40),
+//         TMOUT     := T#5S
+//     );
+//
+// NOTE: The process runs in the TwinCAT service session, so no
+// console window appears. Python output is redirected to
+// doom_log.txt by run_doom.bat — check that file to debug.
+
+
+// --- 3. Add state 40 (Doom Mode) to the CASE statement: ------
 
 // In the CASE nState OF block, add this after state 30:
 //
@@ -30,23 +64,24 @@
 //         doom();
 
 
-// --- 3. Add the Doom Mode trigger before the CASE: -----------
-// Place this right before the "CASE nState OF" line.
-// Right shoulder button enters Doom mode.
-// The existing Y-button 3-second reset (resetTimer) handles exit.
-//
-//     IF XboxController.P_Buttons.bRight_Shoulder AND nState <> 40 THEN
-//         nState := 40;
-//     END_IF
-
-
 // ============================================================
-// Here is the full modified CASE block for reference:
+// Here is the full modified block for reference:
 // ============================================================
 //
 // IF XboxController.P_Buttons.bRight_Shoulder AND nState <> 40 THEN
 //     nState := 40;
 // END_IF
+//
+// DOOM.bActive := (nState = 40);
+//
+// startDoom(
+//     NETID     := '',
+//     PATHSTR   := 'C:\LED_Doom\run_doom.bat',
+//     DIRNAME   := 'C:\LED_Doom',
+//     COMNDLINE := '',
+//     START     := (nState = 40),
+//     TMOUT     := T#5S
+// );
 //
 // CASE nState OF
 //     0: // Selection screen

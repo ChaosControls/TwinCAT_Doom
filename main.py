@@ -45,15 +45,29 @@ def run_preview_only(game, target_fps=20):
     pygame.quit()
 
 
-def run_plc_only(game, bridge, target_fps=20):
+def run_plc_only(game, bridge, target_fps=20, auto_exit=False):
     """Run with PLC output and Xbox controller (no preview window)."""
     bridge.connect()
     try:
         last = time.time()
+        started = last
+        seen_active = False
+        next_check = 0.0
         while True:
             now = time.time()
             dt = min(now - last, 0.1)
             last = now
+
+            # When launched by the PLC (NT_StartProcess), exit once the
+            # PLC leaves Doom mode. Grace period covers the gap between
+            # process launch and the first bActive read.
+            if auto_exit and now >= next_check:
+                next_check = now + 0.25
+                if bridge.read_active():
+                    seen_active = True
+                elif seen_active or now - started > 10.0:
+                    print('PLC left Doom mode — shutting down.')
+                    break
 
             controls = bridge.read_controls()
             game.update(dt, controls)
@@ -168,6 +182,10 @@ def main():
                         help='AMS port (default: 851)')
     parser.add_argument('--fps', type=int, default=20,
                         help='Target frame rate (default: 20)')
+    parser.add_argument('--auto-exit', action='store_true',
+                        help='Exit when the PLC leaves Doom mode (DOOM.bActive '
+                             'goes FALSE). Used when the PLC launches this '
+                             'script via NT_StartProcess. PLC-only mode.')
     args = parser.parse_args()
 
     if not args.preview and not args.plc:
@@ -196,7 +214,7 @@ def main():
     elif args.preview:
         run_preview_only(game, args.fps)
     else:
-        run_plc_only(game, bridge, args.fps)
+        run_plc_only(game, bridge, args.fps, auto_exit=args.auto_exit)
 
 
 if __name__ == '__main__':

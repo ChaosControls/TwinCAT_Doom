@@ -57,6 +57,17 @@ class PLCBridge:
             self.plc = None
         print('Disconnected from PLC')
 
+    def read_active(self):
+        """Read DOOM.bActive — TRUE while the PLC is in Doom mode (state 40).
+
+        Returns True on a transient read error so a comms hiccup doesn't
+        kill the game mid-session.
+        """
+        try:
+            return bool(self.plc.read_by_name('DOOM.bActive', pyads.PLCTYPE_BOOL))
+        except Exception:
+            return True
+
     def write_frame(self, flat_array):
         """Write 2048 UDINTs to m2048.mMatrix."""
         data = struct.pack(f'<{len(flat_array)}I', *flat_array)

@@ -106,6 +106,23 @@ Useful for debugging — you see the game on your monitor while it plays on the 
 | `--plc AMS_NET_ID` | Connect to PLC and push frames |
 | `--port PORT` | AMS port (default: 851) |
 | `--fps FPS` | Target frame rate (default: 20) |
+| `--auto-exit` | Exit when the PLC leaves Doom mode (for PLC-launched runs) |
+
+### Self-contained launch (PLC starts Python)
+
+If Python is installed on the same IPC as the PLC runtime, the PLC can launch
+the game itself — no manual start needed:
+
+1. Clone this repo onto the IPC (e.g. `C:\LED_Doom`) and `pip install pyads`
+2. `MAIN_DoomAdditions.txt` includes an `NT_StartProcess` call (from the
+   `Tc2_System` library) that runs [`run_doom.bat`](run_doom.bat) on entry to
+   state 40 — adjust `PATHSTR`/`DIRNAME` if you cloned somewhere else
+3. Press the right shoulder button → PLC enters Doom mode and spawns Python
+4. Hold Y for 3 seconds → PLC leaves state 40, `DOOM.bActive` goes FALSE, and
+   Python shuts itself down
+
+The process runs in the TwinCAT service session, so there's no visible
+console window — output is redirected to `doom_log.txt` for debugging.
 
 ## Controls
 
@@ -158,6 +175,7 @@ LED_Doom/
 ├── main.py            # Entry point — game loop, preview, CLI
 ├── doom_engine.py     # Raycaster engine, game logic, rendering
 ├── plc_bridge.py      # PyADS communication layer
+├── run_doom.bat       # Launched by the PLC via NT_StartProcess
 ├── requirements.txt
 ├── README.md
 └── plc_code/
