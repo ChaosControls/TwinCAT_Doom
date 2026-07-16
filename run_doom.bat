@@ -18,7 +18,7 @@ rem them here.
 rem ============================================================
 set "PYTHON_FALLBACK=C:\Users\Administrator\AppData\Local\Programs\Python\Python314\python.exe"
 set "TARGET=local"
-set "PORT=851"
+set "PORT=852"
 
 cd /d %~dp0
 
