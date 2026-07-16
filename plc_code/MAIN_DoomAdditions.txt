@@ -34,14 +34,14 @@
 //         fbLampCheck(controls := doomControls);
 
 
-// --- 3. Add the DOOM.bDoomMode trigger before the CASE: ------
-// Place this right before the "CASE nState OF" line:
+// --- 3. Add the Doom Mode trigger before the CASE: -----------
+// Place this right before the "CASE nState OF" line.
+// Right shoulder button enters Doom mode.
+// The existing Y-button 3-second reset (resetTimer) already
+// handles returning to state 0 from any state, including Doom.
 //
-//     IF DOOM.bDoomMode AND nState <> 40 THEN
+//     IF XboxController.P_Buttons.bRight_Shoulder AND nState <> 40 THEN
 //         nState := 40;
-//     END_IF
-//     IF NOT DOOM.bDoomMode AND nState = 40 THEN
-//         nState := 0;
 //     END_IF
 
 
@@ -49,11 +49,8 @@
 // Here is the full modified CASE block for reference:
 // ============================================================
 //
-// IF DOOM.bDoomMode AND nState <> 40 THEN
+// IF XboxController.P_Buttons.bRight_Shoulder AND nState <> 40 THEN
 //     nState := 40;
-// END_IF
-// IF NOT DOOM.bDoomMode AND nState = 40 THEN
-//     nState := 0;
 // END_IF
 //
 // CASE nState OF
