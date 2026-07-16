@@ -1,0 +1,2 @@
+pyads
+pygame-ce
