@@ -1,0 +1,88 @@
+// ============================================================
+// MAIN — Doom Mode Additions
+//
+// Add these changes to your existing MAIN program.
+// ============================================================
+
+
+// --- 1. Add these variables to the MAIN VAR block: -----------
+//
+//     doomControls : gameControls;   // blank controls for Doom mode
+//     doomTransform : FB_MatrixTransform;
+//
+
+
+// --- 2. Add state 40 (Doom Mode) to the CASE statement: ------
+
+// In the CASE nState OF block, add this after state 30:
+//
+//     40: // Doom Mode — Python pushes frames via ADS
+//         // Copy controller state to DOOM GVL for Python to read
+//         DOOM.jsLeftX  := XboxController.P_Left_Joystick.fX;
+//         DOOM.jsLeftY  := XboxController.P_Left_Joystick.fY;
+//         DOOM.jsRightX := XboxController.P_Right_Joystick.fX;
+//         DOOM.jsRightY := XboxController.P_Right_Joystick.fY;
+//         DOOM.btnA     := controller.aButton;
+//         DOOM.btnB     := controller.bButton;
+//         DOOM.btnX     := controller.xButton;
+//         DOOM.btnStart := XboxController.P_Buttons.bStart;
+//
+//         // Transform the matrix that Python writes via ADS
+//         doomTransform(inMatrix := m2048.mMatrix);
+//
+//         // Run LED output with blank controls (no lamp test)
+//         fbLampCheck(controls := doomControls);
+
+
+// --- 3. Add the DOOM.bDoomMode trigger before the CASE: ------
+// Place this right before the "CASE nState OF" line:
+//
+//     IF DOOM.bDoomMode AND nState <> 40 THEN
+//         nState := 40;
+//     END_IF
+//     IF NOT DOOM.bDoomMode AND nState = 40 THEN
+//         nState := 0;
+//     END_IF
+
+
+// ============================================================
+// Here is the full modified CASE block for reference:
+// ============================================================
+//
+// IF DOOM.bDoomMode AND nState <> 40 THEN
+//     nState := 40;
+// END_IF
+// IF NOT DOOM.bDoomMode AND nState = 40 THEN
+//     nState := 0;
+// END_IF
+//
+// CASE nState OF
+//     0: // Selection screen
+//         startUp(controls := controller,
+//                 selection => nState);
+//
+//     10: // Marquee Mode
+//         fMarquee(controls := controller);
+//
+//     20: // Lamp Check
+//         fbLampCheck(controls := controller);
+//
+//     30: // Game Mode
+//         game(beckhoffColor := cRed,
+//              txtColor := cBlue,
+//              controls := controller);
+//
+//     40: // Doom Mode
+//         DOOM.jsLeftX  := XboxController.P_Left_Joystick.fX;
+//         DOOM.jsLeftY  := XboxController.P_Left_Joystick.fY;
+//         DOOM.jsRightX := XboxController.P_Right_Joystick.fX;
+//         DOOM.jsRightY := XboxController.P_Right_Joystick.fY;
+//         DOOM.btnA     := controller.aButton;
+//         DOOM.btnB     := controller.bButton;
+//         DOOM.btnX     := controller.xButton;
+//         DOOM.btnStart := XboxController.P_Buttons.bStart;
+//
+//         doomTransform(inMatrix := m2048.mMatrix);
+//         fbLampCheck(controls := doomControls);
+//
+// END_CASE
