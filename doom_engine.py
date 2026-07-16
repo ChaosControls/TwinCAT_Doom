@@ -53,6 +53,39 @@ WALL_COLORS = {
 
 C_ENEMY_IMP   = rgb(195, 40, 25)
 C_ENEMY_DEMON = rgb(155, 25, 75)
+C_EYE         = rgb(255, 210, 0)
+
+# Enemy sprite stencils — 'X' = body pixel, 'E' = eye pixel, '.' = transparent.
+# Stretched to the sprite's on-screen rectangle with nearest-neighbor sampling,
+# so the silhouette holds up close and far away.
+IMP_SHAPE = [
+    '...XX...',
+    '..EXXE..',
+    '..EXXE..',
+    '...XX...',
+    '.XXXXXX.',
+    'XXXXXXXX',
+    'X.XXXX.X',
+    'X.XXXX.X',
+    '..XXXX..',
+    '..X..X..',
+    '..X..X..',
+    '.XX..XX.',
+]
+
+DEMON_SHAPE = [
+    'X......X',
+    'X.XXXX.X',
+    '..EXXE..',
+    '..EXXE..',
+    '.XXXXXX.',
+    'XXXXXXXX',
+    'XXXXXXXX',
+    'X.XXXX.X',
+    '..XXXX..',
+    '.XX..XX.',
+    '.XX..XX.',
+]
 C_ITEM_HEALTH = rgb(25, 210, 25)
 C_ITEM_AMMO   = rgb(210, 210, 25)
 C_GUN         = rgb(115, 115, 120)
@@ -132,8 +165,10 @@ class Player:
 
 class Enemy:
     TYPES = {
-        'imp':   {'hp': 100, 'color': C_ENEMY_IMP,   'speed': 1.5, 'damage': 8},
-        'demon': {'hp': 150, 'color': C_ENEMY_DEMON,  'speed': 2.2, 'damage': 14},
+        'imp':   {'hp': 100, 'color': C_ENEMY_IMP,   'speed': 1.5, 'damage': 8,
+                  'shape': IMP_SHAPE},
+        'demon': {'hp': 150, 'color': C_ENEMY_DEMON,  'speed': 2.2, 'damage': 14,
+                  'shape': DEMON_SHAPE},
     }
 
     def __init__(self, x, y, kind='imp'):
@@ -142,6 +177,7 @@ class Enemy:
         self.y = y
         self.hp = t['hp']
         self.color = t['color']
+        self.shape = t['shape']
         self.speed = t['speed']
         self.damage = t['damage']
         self.alive = True
@@ -438,17 +474,17 @@ class DoomGame:
         for e in self.enemies:
             if e.alive:
                 c = rgb(255, 120, 120) if e.hurt_timer > 0 else e.color
-                sprites.append((e.x, e.y, c, 1.0))
+                sprites.append((e.x, e.y, c, 1.0, e.shape))
         for item in self.items:
             if not item.picked_up:
                 pulse = 0.6 + 0.4 * math.sin(self.time * 5)
-                sprites.append((item.x, item.y, shade_color(item.color, pulse), 0.5))
+                sprites.append((item.x, item.y, shade_color(item.color, pulse), 0.5, None))
 
         sprites.sort(
             key=lambda s: (s[0] - p.x) ** 2 + (s[1] - p.y) ** 2, reverse=True
         )
 
-        for sx, sy, color, height_scale in sprites:
+        for sx, sy, color, height_scale, shape in sprites:
             rx, ry = sx - p.x, sy - p.y
             tx = inv_det * (dir_y * rx - dir_x * ry)
             ty = inv_det * (-plane_y * rx + plane_x * ry)
@@ -465,11 +501,30 @@ class DoomGame:
             sf = max(0.15, 1.0 - ty * 0.08)
             sc = shade_color(color, sf)
 
-            x_start = max(0, scr_x - spr_w // 2)
+            # Unclamped sprite rect origin — needed to map screen pixels
+            # back to stencil coordinates even when partially off-screen.
+            top = HALF_H - spr_h // 2
+            left = scr_x - spr_w // 2
+
+            x_start = max(0, left)
             x_end = min(SCREEN_W, scr_x + spr_w // 2 + 1)
             for dx in range(x_start, x_end):
-                if ty < self.zbuf[dx]:
-                    for dy in range(ds_y, de_y + 1):
+                if ty >= self.zbuf[dx]:
+                    continue
+                if shape:
+                    # Sample the pixel center so 1-2 px wide sprites hit
+                    # the middle of the stencil instead of a blank edge.
+                    mu = ((dx - left) * 2 + 1) * len(shape[0]) // (2 * spr_w)
+                    mu = min(max(mu, 0), len(shape[0]) - 1)
+                for dy in range(ds_y, de_y + 1):
+                    if shape:
+                        mv = ((dy - top) * 2 + 1) * len(shape) // (2 * max(spr_h, 1))
+                        mv = min(max(mv, 0), len(shape) - 1)
+                        cell = shape[mv][mu]
+                        if cell == '.':
+                            continue
+                        self.fb[dy][dx] = C_EYE if cell == 'E' else sc
+                    else:
                         self.fb[dy][dx] = sc
 
     def _render_weapon(self):
